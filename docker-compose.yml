@@ -1,0 +1,17 @@
+# docker run -it \
+#   --cap-add=NET_ADMIN \
+#   --device /dev/net/tun \
+#   --privileged \
+#   parser_magnit_ru
+
+version: '3.8'
+services:
+  vpn-runner:
+    image: parser_magnit_ru
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    privileged: true
+    stdin_open: true
+    tty: true
