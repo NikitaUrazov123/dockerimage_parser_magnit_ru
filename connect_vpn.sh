@@ -3,7 +3,8 @@
 VPN_DIR="/etc/openvpn/configs"
 LOG_FILE="/tmp/openvpn_test.log"
 SUCCESS_FLAG="/tmp/openvpn_success.flag"
-DB_IP="192.168.110.187"
+
+DB_IP="${DB_HOST:-}"
 
 echo "=== [VPN] Запуск VPN подключения ===" | tee -a "$LOG_FILE"
 
