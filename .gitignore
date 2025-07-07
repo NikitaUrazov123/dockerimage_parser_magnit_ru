@@ -1,2 +1,5 @@
 venv/
 ovpns/
+.env
+__pycache__
+templ

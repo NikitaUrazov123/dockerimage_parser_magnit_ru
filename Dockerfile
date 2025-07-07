@@ -1,38 +1,55 @@
 FROM ubuntu:22.04
 
-# Обновления и установка зависимостей
-RUN apt-get update && apt-get install -y \
+# Отключаем интерактивные диалоги у apt и задаём часовой пояс
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Minsk
+
+# Добавляем PPA для Python 3.11
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update
+
+# Установка зависимостей и Python 3.11
+RUN apt-get install -y \
+    tzdata \
     openvpn \
-    python3 \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
     python3-pip \
-    python3-venv \
     iproute2 \
     curl \
     sudo \
-    && apt-get clean
+  && ln -fs /usr/share/zoneinfo/$TZ /etc/localtime \
+  && dpkg-reconfigure --frontend noninteractive tzdata \
+  && apt-get clean
 
 # Создаём директорию под VPN-конфиги
 RUN mkdir -p /etc/openvpn/configs
 
-# Создаём виртуальное окружение
-RUN python3 -m venv /opt/venv
+# Создаём виртуальное окружение на базе Python 3.11
+RUN python3.11 -m venv /opt/venv
 
 # Активируем виртуальное окружение
 ENV PATH="/opt/venv/bin:$PATH"
 
+COPY requirements.txt /app/requirements.txt
+
 # Копируем скрипты внутрь контейнера
 COPY get_vpn_configs.py /app/get_vpn_configs.py
-COPY connect_vpn.sh /app/connect_vpn.sh
-COPY requirments.txt /app/requirments.txt
+COPY connect_vpn.sh   /app/connect_vpn.sh
+COPY get_product_links.py /app/get_product_links.py
+COPY db_config.py /app/db_config.py
 
-# Установка зависимостей
-RUN pip install --upgrade pip && pip install -r /app/requirments.txt
+# Обновляем pip и устанавливаем Python-зависимости
+RUN pip install --upgrade pip \
+ && pip install -r /app/requirements.txt
 
-# Даём права на выполнение
+# Даём права на выполнение скрипта подключения
 RUN chmod +x /app/connect_vpn.sh
 
-# Рабочая директория
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Запускаем python и после него bash-скрипт
+# По запуску: сначала забираем конфиги, потом подключаем VPN и держим контейнер живым
 CMD ["bash", "-c", "python get_vpn_configs.py && ./connect_vpn.sh && tail -f /dev/null"]
