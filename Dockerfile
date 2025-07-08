@@ -33,23 +33,13 @@ RUN python3.11 -m venv /opt/venv
 # Активируем виртуальное окружение
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt /app/requirements.txt
+WORKDIR /app
 
-# Копируем скрипты внутрь контейнера
-COPY entrypoint.sh /app/entrypoint.sh
-COPY get_vpn_configs.py /app/get_vpn_configs.py
-COPY connect_vpn.sh   /app/connect_vpn.sh
-COPY get_product_links.py /app/get_product_links.py
-COPY db_config.py /app/db_config.py
+COPY app/ /app/
 
-# Обновляем pip и устанавливаем Python-зависимости
+
 RUN pip install --upgrade pip \
  && pip install -r /app/requirements.txt
 
-# Даём права на выполнение скрипта подключения
-RUN chmod +x /app/connect_vpn.sh /app/entrypoint.sh
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["python3", "-m", "main"]

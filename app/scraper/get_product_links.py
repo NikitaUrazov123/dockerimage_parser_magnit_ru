@@ -7,10 +7,11 @@ import time
 from datetime import date
 import logging
 from db_config import SQLALCHEMY_DATABASE_URL
+from hashlib import sha256
 
 # -------------------------------------------------------------------------------------------------------
 def get_last_page_number(url):
-    response = requests.get(url, headers=HEADERS, timeout=5)
+    response = requests.get(url, headers=HEADERS, timeout=8)
     html_text = response.text
 
     outer_pattern = r'<li[^>]*data-test-id="v-pagination-pages-count"[^>]*>.*?</li>'
@@ -25,7 +26,7 @@ def get_last_page_number(url):
 
 # -------------------------------------------------------------------------------------------------------
 def get_product_links(url):
-    response = requests.get(url, headers=HEADERS, timeout=5)
+    response = requests.get(url, headers=HEADERS, timeout=8)
     html_text = response.text
     pattern = r'/product\/[^?"]+'
     return re.findall(pattern, html_text)
@@ -55,11 +56,15 @@ for page_num in range(1, get_last_page_number(DOMAIN_NAME + MAIN_PAGE_LINK) + 1)
     logging.info(f"---------{page_url}---------")
 
     product_links = [DOMAIN_NAME + link for link in get_product_links(page_url)]
-
+    
     df = pd.DataFrame({
         'date': [date.today()] * len(product_links),
         'link': product_links
-    }).drop_duplicates(subset=['date', 'link'])
+        })
+    
+    df['id'] = df.apply(lambda row: sha256(f"{row['date']}{row['link']}".encode('utf-8')).hexdigest(), axis=1)
+    
+    df = df.drop_duplicates(subset=['id'])
 
     with engine.begin() as conn:
         for row in df.to_dict(orient='records'):
