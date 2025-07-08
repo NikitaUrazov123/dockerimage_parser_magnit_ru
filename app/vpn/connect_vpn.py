@@ -3,6 +3,7 @@ import subprocess
 import time
 import glob
 from pathlib import Path
+import logger
 
 
 VPN_DIR = "/etc/openvpn/configs"

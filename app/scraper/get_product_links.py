@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 import time
 from datetime import date
-import logging
+import logger
 from db_config import SQLALCHEMY_DATABASE_URL
 from utils import generate_id
 from bs4 import BeautifulSoup
@@ -37,11 +37,6 @@ def get_product_links(url):
             product_links.add(clean_href)
     return list(product_links)
 # -------------------------------------------------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
 HEADERS = {
     'Accept': '*/*',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
@@ -58,7 +53,7 @@ magnit_links_table = Table('magnit_links', metadata, autoload_with=engine)
 
 for page_num in range(1, get_last_page_number(DOMAIN_NAME + MAIN_PAGE_LINK) + 1):
     page_url = f'{DOMAIN_NAME}{MAIN_PAGE_LINK}?page={page_num}'
-    logging.info(f"{page_url}")
+    logger.logging.info(f"{page_url}")
 
     product_links = [DOMAIN_NAME + link for link in get_product_links(page_url)]
     

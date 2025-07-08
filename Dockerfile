@@ -1,3 +1,27 @@
+# Переменные окружения:
+# - DB_HOST        — адрес сервера PostgreSQL (например, 192.168.110.187)
+# - DB_PORT        — порт PostgreSQL (например, 5432)
+# - DB_NAME        — имя базы данных
+# - DB_USER        — имя пользователя для подключения к БД (например, parser)
+# - DB_PASSWORD    — пароль пользователя
+#
+# Необходимые флаги и параметры:
+# --rm             — автоматически удалить контейнер после завершения работы
+# -it              — интерактивный режим с TTY
+# --cap-add=NET_ADMIN — добавление привелегий для работы с сетевыми интерфейсами
+# --device /dev/net/tun — доступ к устройству /dev/net/tun (для VPN, tunneling и т.п.)
+#
+# Пример запуска:
+# docker run --rm -it \
+#   --cap-add=NET_ADMIN \
+#   --device /dev/net/tun \
+#   -e DB_HOST=192.168.110.187 \
+#   -e DB_PORT=5432 \
+#   -e DB_NAME=my_db \
+#   -e DB_USER=parser \
+#   -e DB_PASSWORD=my_password \
+#   scraper_magnit_ru
+
 FROM ubuntu:22.04
 
 # Отключаем интерактивные диалоги у apt и задаём часовой пояс

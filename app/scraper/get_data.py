@@ -1,6 +1,6 @@
 import requests
 import time
-import logging
+import logger
 from datetime import date
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, MetaData, Table, text
@@ -39,18 +39,9 @@ def get_old_price(text: str) -> float | None:
             return None
     return None
 # -------------------------------------------------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
 HEADERS = {
     'Accept': '*/*',
-    'user-agent': (
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        ' AppleWebKit/537.36 (KHTML, like Gecko)'
-        ' Chrome/95.0.4638.69 Safari/537.36'
-    )
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
 }
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -67,13 +58,13 @@ with engine.begin() as conn:
     ).all()
 
 for link_id, link in rows:
-    logging.info(f"Парсинг {link}")
+    logger.logging.info(f"Парсинг {link}")
     try:
         resp = requests.get(link, headers=HEADERS, timeout=10)
         resp.raise_for_status()
         html = resp.text
     except RequestException as e:
-        logging.warning(f"Не удалось получить {link}: {e}")
+        logger.logging.warning(f"Не удалось получить {link}: {e}")
         time.sleep(2)
         continue
 
@@ -98,7 +89,7 @@ for link_id, link in rows:
         stmt = stmt.on_conflict_do_nothing(index_elements=["record_id"])
         conn.execute(stmt)
 
-    logging.info(f"Запись {filtered_record.get('record_id')}")
+    logger.logging.info(f"Запись {filtered_record.get('record_id')}")
     time.sleep(3)
 
-logging.info("=== Done ===")
+logger.logging.info("=== Done ===")
