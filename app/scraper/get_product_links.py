@@ -2,35 +2,40 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.dialects.postgresql import insert
 import pandas as pd
 import requests
-import re
 import time
 from datetime import date
 import logging
 from db_config import SQLALCHEMY_DATABASE_URL
-from hashlib import sha256
+from utils import generate_id
+from bs4 import BeautifulSoup
 
 # -------------------------------------------------------------------------------------------------------
 def get_last_page_number(url):
     response = requests.get(url, headers=HEADERS, timeout=8)
-    html_text = response.text
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-    outer_pattern = r'<li[^>]*data-test-id="v-pagination-pages-count"[^>]*>.*?</li>'
-    outer_match = re.search(outer_pattern, html_text, re.DOTALL)
-
-    if outer_match:
-        block = outer_match.group(0)
-        inner_pattern = r'<!--\[\s*-->(\d+)\s*<!--\]-->'
-        inner_match = re.search(inner_pattern, block)
-        return int(inner_match.group(1)) if inner_match else 1
+    li_tag = soup.find('li', attrs={'data-test-id': 'v-pagination-pages-count'})
+    if li_tag:
+        text = li_tag.get_text(strip=True)
+        if text.isdigit():
+            return int(text)
+        else:
+            numbers = ''.join(filter(str.isdigit, text))
+            return int(numbers) if numbers else 1
     return 1
 
-# -------------------------------------------------------------------------------------------------------
 def get_product_links(url):
     response = requests.get(url, headers=HEADERS, timeout=8)
-    html_text = response.text
-    pattern = r'/product\/[^?"]+'
-    return re.findall(pattern, html_text)
+    soup = BeautifulSoup(response.text, 'html.parser')
 
+    product_links = set()
+
+    for a_tag in soup.find_all('a', href=True):
+        href = a_tag['href']
+        if href.startswith('/product/'):
+            clean_href = href.split('?')[0]
+            product_links.add(clean_href)
+    return list(product_links)
 # -------------------------------------------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
@@ -53,7 +58,7 @@ magnit_links_table = Table('magnit_links', metadata, autoload_with=engine)
 
 for page_num in range(1, get_last_page_number(DOMAIN_NAME + MAIN_PAGE_LINK) + 1):
     page_url = f'{DOMAIN_NAME}{MAIN_PAGE_LINK}?page={page_num}'
-    logging.info(f"---------{page_url}---------")
+    logging.info(f"{page_url}")
 
     product_links = [DOMAIN_NAME + link for link in get_product_links(page_url)]
     
@@ -62,7 +67,7 @@ for page_num in range(1, get_last_page_number(DOMAIN_NAME + MAIN_PAGE_LINK) + 1)
         'link': product_links
         })
     
-    df['id'] = df.apply(lambda row: sha256(f"{row['date']}{row['link']}".encode('utf-8')).hexdigest(), axis=1)
+    df['id'] = df.apply(lambda row: generate_id(row['date'], row['link']), axis=1)
     
     df = df.drop_duplicates(subset=['id'])
 

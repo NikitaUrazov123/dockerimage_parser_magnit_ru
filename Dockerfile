@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update
 
-# Установка зависимостей и Python 3.11
 RUN apt-get install -y \
     tzdata \
     openvpn \
@@ -24,22 +23,18 @@ RUN apt-get install -y \
   && dpkg-reconfigure --frontend noninteractive tzdata \
   && apt-get clean
 
-# Создаём директорию под VPN-конфиги
+
 RUN mkdir -p /etc/openvpn/configs
 
-# Создаём виртуальное окружение на базе Python 3.11
 RUN python3.11 -m venv /opt/venv
 
-# Активируем виртуальное окружение
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
 COPY app/ /app/
 
-
 RUN pip install --upgrade pip \
  && pip install -r /app/requirements.txt
-
 
 ENTRYPOINT ["python3", "-m", "main"]

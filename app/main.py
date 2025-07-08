@@ -15,6 +15,7 @@ def main():
     run("Получаем VPN‑конфиги", ["python3", "-m", "vpn.get_vpn_configs"])
     run("Подключаем VPN", ["python3", "-m", "vpn.connect_vpn"])
     run("Получаем ссылки", ["python3", "-m", "scraper.get_product_links"])
+    run("Получаем данные", ["python3", "-m", "scraper.get_data"])
     print("=== Done ===")
 
 if __name__ == "__main__":

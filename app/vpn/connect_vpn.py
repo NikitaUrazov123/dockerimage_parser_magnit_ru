@@ -39,7 +39,7 @@ def kill_openvpn(config):
     subprocess.run(["pkill", "-f", f"openvpn --config {config}"])
 
 def main():
-    log("=== [VPN] Запуск VPN подключения ===")
+    log("=== Запуск VPN подключения ===")
     orig_gw = get_original_gateway()
     log(f"Исходный шлюз локальной сети: {orig_gw}")
 
@@ -55,14 +55,14 @@ def main():
                 Path(SUCCESS_FLAG).touch()
                 add_route_to_db(DB_IP, orig_gw)
                 update_dns()
-                log("VPN подключён, маршруты и DNS настроены.")
+                log("VPN подключён, маршруты и DNS настроены")
                 return 0
 
         log(f"Не удалось подключиться через {config}")
         kill_openvpn(config)
         time.sleep(2)
 
-    log("Не удалось подключиться ни по одному из конфигов.")
+    log("Не удалось подключиться")
     return 1
 
 if __name__ == "__main__":
