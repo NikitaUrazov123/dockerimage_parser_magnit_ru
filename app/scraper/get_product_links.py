@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 # -------------------------------------------------------------------------------------------------------
 def get_last_page_number(url):
-    response = requests.get(url, headers=HEADERS, timeout=10)
+    response = requests.get(url, headers=HEADERS, timeout=15)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     li_tag = soup.find('li', attrs={'data-test-id': 'v-pagination-pages-count'})
@@ -25,7 +25,7 @@ def get_last_page_number(url):
     return 1
 
 def get_product_links(url):
-    response = requests.get(url, headers=HEADERS, timeout=10)
+    response = requests.get(url, headers=HEADERS, timeout=15)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     product_links = set()
