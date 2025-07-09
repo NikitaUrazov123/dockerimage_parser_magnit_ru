@@ -68,7 +68,7 @@ with engine.begin() as conn:
 for link_id, link in rows:
     logger.logging.info(f"Парсинг {link}")
     try:
-        resp = requests.get(link, headers=HEADERS, timeout=10)
+        resp = requests.get(link, headers=HEADERS, timeout=12)
         resp.raise_for_status()
         html = resp.text
     except RequestException as e:
