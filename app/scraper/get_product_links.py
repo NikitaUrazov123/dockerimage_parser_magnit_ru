@@ -43,32 +43,35 @@ HEADERS = {
 }
 
 DOMAIN_NAME = 'https://magnit.ru'
-MAIN_PAGE_LINK = '/catalog/7485-detskie_tovary_'
+
+GENERAL_LINKS = ['/catalog/7485-detskie_tovary_',
+                 '/catalog/35727-molochnoe_pitanie_novoe',
+                 '/catalog/35731-pyure_pitanie_novoe']
 
 # -------------------------------------------------------------------------------------------------------
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 metadata = MetaData(schema='online_market_monitoring')
 magnit_links_table = Table('magnit_links', metadata, autoload_with=engine)
 
+for links in GENERAL_LINKS:
+    for page_num in range(1, get_last_page_number(DOMAIN_NAME + links) + 1):
+        page_url = f'{DOMAIN_NAME}{links}?page={page_num}'
+        logger.logging.info(f"{page_url}")
 
-for page_num in range(1, get_last_page_number(DOMAIN_NAME + MAIN_PAGE_LINK) + 1):
-    page_url = f'{DOMAIN_NAME}{MAIN_PAGE_LINK}?page={page_num}'
-    logger.logging.info(f"{page_url}")
+        product_links = [DOMAIN_NAME + link for link in get_product_links(page_url)]
+        
+        df = pd.DataFrame({
+            'date': [date.today()] * len(product_links),
+            'link': product_links
+            })
+        
+        df['id'] = df.apply(lambda row: generate_id(row['date'], row['link']), axis=1)
+        
+        df = df.drop_duplicates(subset=['id'])
 
-    product_links = [DOMAIN_NAME + link for link in get_product_links(page_url)]
-    
-    df = pd.DataFrame({
-        'date': [date.today()] * len(product_links),
-        'link': product_links
-        })
-    
-    df['id'] = df.apply(lambda row: generate_id(row['date'], row['link']), axis=1)
-    
-    df = df.drop_duplicates(subset=['id'])
+        with engine.begin() as conn:
+            for row in df.to_dict(orient='records'):
+                stmt = insert(magnit_links_table).values(**row).on_conflict_do_nothing()
+                conn.execute(stmt)
 
-    with engine.begin() as conn:
-        for row in df.to_dict(orient='records'):
-            stmt = insert(magnit_links_table).values(**row).on_conflict_do_nothing()
-            conn.execute(stmt)
-
-    time.sleep(2)
+        time.sleep(2)
