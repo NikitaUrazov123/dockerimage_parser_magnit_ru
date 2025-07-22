@@ -4,6 +4,7 @@ import time
 import glob
 from pathlib import Path
 import logger
+import random
 
 
 VPN_DIR = "/etc/openvpn/configs"
@@ -44,7 +45,10 @@ def main():
     orig_gw = get_original_gateway()
     log(f"Исходный шлюз локальной сети: {orig_gw}")
 
-    for config in glob.glob(os.path.join(VPN_DIR, "*.ovpn")):
+    configs = glob.glob(os.path.join(VPN_DIR, "*.ovpn"))
+    random.shuffle(configs)
+
+    for config in configs:
         log(f"Пробуем {config}...")
 
         subprocess.Popen(["openvpn", "--config", config, "--daemon", "--log", LOG_FILE])
