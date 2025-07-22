@@ -74,4 +74,4 @@ for links in GENERAL_LINKS:
                 stmt = insert(magnit_links_table).values(**row).on_conflict_do_nothing()
                 conn.execute(stmt)
 
-        time.sleep(2)
+        time.sleep(4)

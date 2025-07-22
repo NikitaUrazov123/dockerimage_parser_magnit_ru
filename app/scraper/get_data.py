@@ -100,6 +100,6 @@ for link_id, link in rows:
         conn.execute(stmt)
 
     logger.logging.info(f"Записан {filtered_record.get('record_id')}")
-    time.sleep(3)
+    time.sleep(4)
 
 logger.logging.info("=== Done ===")
